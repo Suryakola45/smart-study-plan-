@@ -113,6 +113,20 @@ body {
     border-left-color: #ff9f1c !important;
 }
 
+/* Ensure Bootstrap modals always sit cleanly above all backdrops and transformed elements */
+.modal {
+    z-index: 1060 !important;
+}
+
+.modal-backdrop {
+    z-index: 1055 !important;
+}
+
+.modal-dialog {
+    z-index: 1065 !important;
+}
+
+
 .ai-recommendation-box {
     background: linear-gradient(135deg, #f0f4ff 0%, #e6f0fa 100%);
     border: 1px solid #c7d7fe;

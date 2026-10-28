@@ -181,10 +181,12 @@
                                                 </c:when>
                                                 <c:otherwise>
                                                     <div class="btn-group btn-group-sm">
-                                                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#completeModal${s.id}" title="Complete">
+                                                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#completeSessionModal"
+                                                                data-session-id="${s.id}" data-topic-title="<c:out value="${s.topicTitle}"/>" data-duration="${s.durationMinutes}" title="Complete">
                                                             <i class="fa-solid fa-check"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#partialModal${s.id}" title="Partial">
+                                                        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#partialSessionModal"
+                                                                data-session-id="${s.id}" data-topic-title="<c:out value="${s.topicTitle}"/>" data-duration="${s.durationMinutes}" title="Partial">
                                                             <i class="fa-solid fa-hourglass-start"></i>
                                                         </button>
                                                         <form action="${pageContext.request.contextPath}/session/action" method="post" class="d-inline" onsubmit="return confirm('Skip this session?')">
@@ -200,71 +202,6 @@
                                                 </c:otherwise>
                                             </c:choose>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <!-- Complete Modal -->
-                                <div class="modal fade" id="completeModal${s.id}" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <form action="${pageContext.request.contextPath}/session/action" method="post">
-                                            <input type="hidden" name="csrfToken" value="${csrfToken}">
-                                            <input type="hidden" name="id" value="${s.id}">
-                                            <input type="hidden" name="action" value="complete">
-                                            <input type="hidden" name="returnUrl" value="/dashboard">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h6 class="modal-title fw-bold">Complete Study Session</h6>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p class="mb-2">Topic: <strong><c:out value="${s.topicTitle}"/></strong></p>
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Actual Minutes Studied</label>
-                                                        <input type="number" name="actualMinutes" class="form-control" value="${s.durationMinutes}" min="1" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Study Notes (Optional)</label>
-                                                        <textarea name="notes" class="form-control" rows="2" placeholder="Key concepts grasped..."></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-success btn-sm">Confirm Completed</button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-
-                                <!-- Partial Modal -->
-                                <div class="modal fade" id="partialModal${s.id}" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <form action="${pageContext.request.contextPath}/session/action" method="post">
-                                            <input type="hidden" name="csrfToken" value="${csrfToken}">
-                                            <input type="hidden" name="id" value="${s.id}">
-                                            <input type="hidden" name="action" value="partial">
-                                            <input type="hidden" name="returnUrl" value="/dashboard">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h6 class="modal-title fw-bold">Record Partial Study Minutes</h6>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Minutes Studied</label>
-                                                        <input type="number" name="actualMinutes" class="form-control" value="30" min="1" max="${s.durationMinutes}" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Notes</label>
-                                                        <textarea name="notes" class="form-control" rows="2" placeholder="Reason or partial coverage..."></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-warning btn-sm">Save Partial Progress</button>
-                                                </div>
-                                            </div>
-                                        </form>
                                     </div>
                                 </div>
                             </c:forEach>
