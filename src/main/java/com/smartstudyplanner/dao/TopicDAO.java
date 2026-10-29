@@ -206,6 +206,7 @@ public class TopicDAO implements GenericDAO<Topic, Long> {
                 }
             }
             conn.commit();
+            conn.setAutoCommit(true);
             return true;
         } catch (SQLException e) {
             throw new DatabaseException("Failed to update topic progress transactionally: " + e.getMessage(), e);

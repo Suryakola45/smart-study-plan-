@@ -25,7 +25,7 @@
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
                             <input type="text" class="form-control" id="identifier" name="identifier" 
-                                   value="${identifier}" required placeholder="Enter username or email" autofocus>
+                                   value="${identifier}" autocomplete="username" required placeholder="Enter username or email" autofocus>
                         </div>
                     </div>
 
@@ -34,7 +34,7 @@
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="fa-solid fa-lock text-muted"></i></span>
                             <input type="password" class="form-control" id="password" name="password" 
-                                   required placeholder="Enter your password">
+                                   autocomplete="current-password" required placeholder="Enter your password">
                         </div>
                     </div>
 
@@ -59,4 +59,3 @@
 </div>
 
 <jsp:include page="/WEB-INF/views/layout/footer.jsp"/>
-

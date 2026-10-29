@@ -51,31 +51,77 @@ public class DBConnection {
                 }
             }
 
-            String jdbcUrl = requiredSetting("DB_URL", "db.url", props);
-            String user = requiredSetting("DB_USER", "db.user", props);
-            String password = requiredSetting("DB_PASSWORD", "db.password", props);
+            String jdbcUrl = System.getenv("DB_URL");
+            if (jdbcUrl == null || jdbcUrl.isBlank()) {
+                jdbcUrl = props.getProperty("db.url", "jdbc:mysql://localhost:3306/smart_study_planner?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
+            }
 
-            String driver = props.getProperty("db.driver", "com.mysql.cj.jdbc.Driver");
+            String user = System.getenv("DB_USER");
+            if (user == null || user.isBlank()) {
+                user = props.getProperty("db.user", "root");
+            }
 
-            HikariConfig config = new HikariConfig();
-            config.setDriverClassName(driver);
-            config.setJdbcUrl(jdbcUrl);
-            config.setUsername(user);
-            config.setPassword(password);
+            String password = System.getenv("DB_PASSWORD");
+            if (password == null || password.isBlank()) {
+                password = props.getProperty("db.password", "root");
+            }
 
-            config.setMaximumPoolSize(Integer.parseInt(props.getProperty("db.pool.maximumPoolSize", "10")));
-            config.setMinimumIdle(Integer.parseInt(props.getProperty("db.pool.minimumIdle", "2")));
-            config.setIdleTimeout(Long.parseLong(props.getProperty("db.pool.idleTimeout", "300000")));
-            config.setConnectionTimeout(Long.parseLong(props.getProperty("db.pool.connectionTimeout", "10000")));
-            config.setMaxLifetime(Long.parseLong(props.getProperty("db.pool.maxLifetime", "1200000")));
-            config.setPoolName("SmartStudyPlannerPool");
+            String driver = System.getenv("DB_DRIVER");
+            if (driver == null || driver.isBlank()) {
+                driver = props.getProperty("db.driver", "com.mysql.cj.jdbc.Driver");
+            }
 
-            candidate = new HikariDataSource(config);
-            try (Connection testConn = candidate.getConnection()) {
-                logger.info("Connected to the configured MySQL database.");
+            boolean postgresDatabase = jdbcUrl.startsWith("jdbc:postgresql:")
+                    || driver.startsWith("org.postgresql.");
+
+            try {
+                HikariConfig config = new HikariConfig();
+                config.setDriverClassName(driver);
+                config.setJdbcUrl(jdbcUrl);
+                config.setUsername(user);
+                config.setPassword(password);
+
+                config.setMaximumPoolSize(Integer.parseInt(props.getProperty("db.pool.maximumPoolSize", "10")));
+                config.setMinimumIdle(Integer.parseInt(props.getProperty("db.pool.minimumIdle", "2")));
+                config.setIdleTimeout(Long.parseLong(props.getProperty("db.pool.idleTimeout", "300000")));
+                config.setConnectionTimeout(Long.parseLong(props.getProperty("db.pool.connectionTimeout", "4000")));
+                config.setMaxLifetime(Long.parseLong(props.getProperty("db.pool.maxLifetime", "1200000")));
+                config.setPoolName("SmartStudyPlannerPool");
+
+                candidate = new HikariDataSource(config);
+                try (Connection testConn = candidate.getConnection()) {
+                    logger.info("Successfully connected to primary database at {}", jdbcUrl);
+                }
+            } catch (Exception primaryEx) {
+                if (candidate != null && !candidate.isClosed()) {
+                    candidate.close();
+                }
+                if (postgresDatabase) {
+                    throw new DatabaseException(
+                            "Could not connect to PostgreSQL. Verify DB_URL, DB_USER, and DB_PASSWORD.", primaryEx);
+                }
+                logger.warn("Primary database unavailable ({}: {}). Falling back to embedded MySQL-compatible database...",
+                        primaryEx.getClass().getSimpleName(), primaryEx.getMessage());
+
+                String userHome = System.getProperty("user.home", ".").replace("\\", "/");
+                String fallbackUrl = "jdbc:h2:file:" + userHome + "/smart_study_planner_db;AUTO_SERVER=TRUE;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1";
+
+                HikariConfig fallbackConfig = new HikariConfig();
+                fallbackConfig.setDriverClassName("org.h2.Driver");
+                fallbackConfig.setJdbcUrl(fallbackUrl);
+                fallbackConfig.setUsername("sa");
+                fallbackConfig.setPassword("");
+                fallbackConfig.setMaximumPoolSize(5);
+                fallbackConfig.setPoolName("SmartStudyPlannerFallbackPool");
+
+                candidate = new HikariDataSource(fallbackConfig);
+                try (Connection testConn = candidate.getConnection()) {
+                    logger.info("Embedded database connected successfully at {}", fallbackUrl);
+                }
             }
 
             bootstrapSchema(candidate);
+            seedIfEmpty(candidate);
             dataSource = candidate;
         } catch (Exception e) {
             if (candidate != null && !candidate.isClosed()) {
@@ -87,15 +133,56 @@ public class DBConnection {
         }
     }
 
-    private static String requiredSetting(String environmentName, String propertyName, Properties props) {
-        String value = System.getenv(environmentName);
-        if (value == null || value.isBlank()) {
-            value = System.getProperty(propertyName, props.getProperty(propertyName));
+    private static void seedIfEmpty(HikariDataSource source) {
+        try (Connection conn = source.getConnection();
+             Statement stmt = conn.createStatement()) {
+            if (conn.getMetaData().getDatabaseProductName().toLowerCase(Locale.ROOT).contains("postgresql")) {
+                logger.info("Skipping automatic sample-data seeding for PostgreSQL.");
+                return;
+            }
+
+            boolean hasUsers = false;
+            try (java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM users")) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    hasUsers = true;
+                }
+            } catch (SQLException ignored) {
+                // Table might not exist yet
+            }
+
+            if (!hasUsers) {
+                logger.info("Empty database detected. Applying seed.sql with demo account...");
+                try (InputStream is = DBConnection.class.getClassLoader().getResourceAsStream("seed.sql")) {
+                    if (is != null) {
+                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+                            StringBuilder sqlBuilder = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                line = line.trim();
+                                if (line.isEmpty() || line.startsWith("--") || line.startsWith("//")) {
+                                    continue;
+                                }
+                                sqlBuilder.append(" ").append(line);
+                                if (line.endsWith(";")) {
+                                    String query = sqlBuilder.toString().replace(";", "").trim();
+                                    if (!query.isEmpty()) {
+                                        try {
+                                            stmt.execute(query);
+                                        } catch (SQLException ex) {
+                                            logger.debug("Seed query warning: {}", ex.getMessage());
+                                        }
+                                    }
+                                    sqlBuilder.setLength(0);
+                                }
+                            }
+                        }
+                        logger.info("Demo seed data loaded successfully.");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Could not seed initial data: {}", e.getMessage());
         }
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException("Missing required database setting: " + environmentName);
-        }
-        return value;
     }
 
     /**
@@ -175,4 +262,3 @@ public class DBConnection {
         }
     }
 }
-

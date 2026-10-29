@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +23,7 @@ public class UserDAO implements GenericDAO<User, Long> {
     public User save(User user) {
         String sql = "INSERT INTO users (username, email, password_hash, full_name, preferred_strategy) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement ps = conn.prepareStatement(sql, new String[] {"id"})) {
 
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getEmail());
@@ -178,4 +177,3 @@ public class UserDAO implements GenericDAO<User, Long> {
         return user;
     }
 }
-

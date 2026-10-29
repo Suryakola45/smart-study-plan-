@@ -260,6 +260,82 @@
             </div>
         </div>
     </div>
+
+    <!-- Top-Level Complete Session Modal -->
+    <div class="modal fade" id="completeSessionModal" tabindex="-1" aria-labelledby="dashCompleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form action="${pageContext.request.contextPath}/session/action" method="post">
+                <input type="hidden" name="csrfToken" value="${csrfToken}">
+                <input type="hidden" name="id" id="completeSessionId" value="">
+                <input type="hidden" name="action" value="complete">
+                <input type="hidden" name="returnUrl" value="/dashboard">
+                <div class="modal-content shadow">
+                    <div class="modal-header bg-success text-white">
+                        <h6 class="modal-title fw-bold" id="dashCompleteModalLabel">
+                            <i class="fa-solid fa-circle-check me-2"></i> Complete Study Session
+                        </h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-3">Topic: <strong id="completeTopicTitle" class="text-primary"></strong></p>
+                        <div class="mb-3">
+                            <label for="completeActualMinutes" class="form-label fw-semibold">Actual Minutes Studied</label>
+                            <input type="number" name="actualMinutes" id="completeActualMinutes" class="form-control" value="45" min="1" required>
+                            <div class="form-text">Minutes recorded towards completing this topic.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="completeNotes" class="form-label fw-semibold">Study Notes (Optional)</label>
+                            <textarea name="notes" id="completeNotes" class="form-control" rows="3" placeholder="Key concepts grasped..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success btn-sm px-3">
+                            <i class="fa-solid fa-check me-1"></i> Confirm Completed
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Top-Level Partial Session Modal -->
+    <div class="modal fade" id="partialSessionModal" tabindex="-1" aria-labelledby="dashPartialModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form action="${pageContext.request.contextPath}/session/action" method="post">
+                <input type="hidden" name="csrfToken" value="${csrfToken}">
+                <input type="hidden" name="id" id="partialSessionId" value="">
+                <input type="hidden" name="action" value="partial">
+                <input type="hidden" name="returnUrl" value="/dashboard">
+                <div class="modal-content shadow">
+                    <div class="modal-header bg-warning text-dark">
+                        <h6 class="modal-title fw-bold" id="dashPartialModalLabel">
+                            <i class="fa-solid fa-hourglass-half me-2"></i> Record Partial Study Minutes
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-3">Topic: <strong id="partialTopicTitle" class="text-primary"></strong></p>
+                        <div class="mb-3">
+                            <label for="partialActualMinutes" class="form-label fw-semibold">Actual Minutes Studied</label>
+                            <input type="number" name="actualMinutes" id="partialActualMinutes" class="form-control" value="30" min="1" required>
+                            <div class="form-text">Recorded minutes will count towards total topic progress.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="partialNotes" class="form-label fw-semibold">Notes</label>
+                            <textarea name="notes" id="partialNotes" class="form-control" rows="3" placeholder="Reason or partial coverage..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning btn-sm px-3">
+                            <i class="fa-solid fa-save me-1"></i> Save Partial Progress
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>

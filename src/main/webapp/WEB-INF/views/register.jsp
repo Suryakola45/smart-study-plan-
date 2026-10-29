@@ -23,25 +23,25 @@
                     <div class="mb-3">
                         <label for="fullName" class="form-label fw-semibold">Full Name</label>
                         <input type="text" class="form-control" id="fullName" name="fullName"
-                               value="${fullName}" required placeholder="e.g. Alex Sharma">
+                               value="${fullName}" autocomplete="name" required placeholder="e.g. Alex Sharma">
                     </div>
 
                     <div class="mb-3">
                         <label for="username" class="form-label fw-semibold">Username</label>
                         <input type="text" class="form-control" id="username" name="username"
-                               value="${username}" required minlength="3" placeholder="Choose a username">
+                               value="${username}" autocomplete="username" required minlength="3" placeholder="Choose a username">
                     </div>
 
                     <div class="mb-3">
                         <label for="email" class="form-label fw-semibold">Email Address</label>
                         <input type="email" class="form-control" id="email" name="email"
-                               value="${email}" required placeholder="student@university.edu">
+                               value="${email}" autocomplete="email" required placeholder="student@university.edu">
                     </div>
 
                     <div class="mb-3">
                         <label for="password" class="form-label fw-semibold">Password</label>
                         <input type="password" class="form-control" id="password" name="password"
-                               required minlength="6" placeholder="At least 6 characters">
+                               autocomplete="new-password" required minlength="6" placeholder="At least 6 characters">
                     </div>
 
                     <div class="d-grid mb-3">
@@ -65,4 +65,3 @@
 </div>
 
 <jsp:include page="/WEB-INF/views/layout/footer.jsp"/>
-

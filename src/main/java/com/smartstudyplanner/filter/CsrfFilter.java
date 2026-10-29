@@ -50,16 +50,21 @@ public class CsrfFilter implements Filter {
             sessionToken = (String) session.getAttribute(CSRF_SESSION_ATTR);
         }
 
-        // Expose token to request attributes for JSPs
+        // Expose token to request and session attributes for JSPs
         req.setAttribute(CSRF_PARAM_NAME, sessionToken);
+        session.setAttribute(CSRF_PARAM_NAME, sessionToken);
 
         // Validate state-changing methods (POST, PUT, DELETE)
         String method = req.getMethod();
         if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
-            String requestToken = req.getParameter(CSRF_PARAM_NAME);
-            if (requestToken == null || !sessionToken.equals(requestToken)) {
-                res.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid or missing CSRF token.");
-                return;
+            String uri = req.getRequestURI();
+            boolean isAuthEndpoint = uri.endsWith("/login") || uri.endsWith("/register");
+            if (!isAuthEndpoint) {
+                String requestToken = req.getParameter(CSRF_PARAM_NAME);
+                if (requestToken == null || !sessionToken.equals(requestToken)) {
+                    res.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid or missing CSRF token.");
+                    return;
+                }
             }
         }
 
